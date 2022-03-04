@@ -16,7 +16,7 @@ import Realm from 'realm';
 import {WorkSchema, LandSchema} from '../database/Realm';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 
-const BottomSheetComponent = ({getLand}) => {
+const NewLand = ({getLand}) => {
   const [isVisible, setIsVisible] = useState(false);
   const [date, setDate] = useState(null);
   const [mode, setMode] = useState('date');
@@ -260,4 +260,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default BottomSheetComponent;
+export default NewLand;

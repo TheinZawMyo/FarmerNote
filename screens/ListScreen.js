@@ -7,11 +7,12 @@ import {
   View,
   FlatList,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import {Card} from 'react-native-paper';
 import COLORS from '../consts/Colors';
-import BottomSheetComponent from '../components/BottomSheetComponent';
+import NewLand from '../components/NewLand';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useNavigation} from '@react-navigation/native';
 import {WorkSchema, LandSchema} from '../database/Realm';
@@ -27,13 +28,14 @@ const ListScreen = ({}) => {
 
   let currentYear = new Date().getFullYear();
   let previousYear = currentYear - 1;
+  //Real database
+  let realm = new Realm({
+    schema: [WorkSchema, LandSchema],
+    path: 'FarmerNote.realm',
+    schemaVersion: 2,
+  });
+
   const getLand = useCallback(async () => {
-    //Real database
-    let realm = new Realm({
-      schema: [WorkSchema, LandSchema],
-      path: 'FarmerNote.realm',
-      schemaVersion: 2,
-    });
     let year = selectedYear
       ? // eslint-disable-next-line radix
         parseInt(selectedYear)
@@ -42,7 +44,18 @@ const ListScreen = ({}) => {
     let landData = realm.objects('Lands');
     let landByYear = landData.filtered('created_year =' + year);
     setLand(landByYear);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedYear]);
+
+  // delete land from db
+  const deleteLand = id => {
+    id &&
+      realm.write(() => {
+        realm.delete(realm.objects('Lands').filtered('id =' + id));
+      });
+    getLand();
+    Alert.alert('Success!', '‌အောင်မြင်စွာ ဖယ်ရှားပြီးပါပီ။');
+  };
 
   useEffect(() => {
     getLand(selectedYear);
@@ -50,11 +63,13 @@ const ListScreen = ({}) => {
 
   const renderLand = ({item}) => {
     return (
-      <Card style={styles.card} onPress={() => navigation.navigate('Detail')}>
-        <Image
-          source={require('../images/leaf1.png')}
-          style={styles.cardImage}
-        />
+      <Card style={styles.card}>
+        <TouchableOpacity onPress={() => navigation.navigate('Detail')}>
+          <Image
+            source={require('../images/leaf1.png')}
+            style={styles.cardImage}
+          />
+        </TouchableOpacity>
         <Text style={styles.cardTitle}>{item.name}</Text>
         <Text style={styles.cardDate}>
           {dateFormat(item.created_date, 'MM-dd-yyyy')}
@@ -73,7 +88,7 @@ const ListScreen = ({}) => {
               ]}
             />
           </TouchableOpacity> */}
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => deleteLand(item.id)}>
             <Icon
               name="delete"
               size={18}
@@ -124,7 +139,7 @@ const ListScreen = ({}) => {
         />
       )}
 
-      <BottomSheetComponent getLand={getLand} />
+      <NewLand getLand={getLand} />
     </SafeAreaView>
   );
 };
@@ -178,7 +193,7 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     padding: 5,
-    borderBottomLeftRadius: 12,
+    borderBottomLeftRadius: 7,
     textAlign: 'center',
     backgroundColor: COLORS.green,
   },
